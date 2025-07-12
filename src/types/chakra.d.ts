@@ -134,6 +134,7 @@ declare module '@chakra-ui/react' {
   export interface ChakraProviderProps {
     children: React.ReactNode
     theme?: any
+    value?: Record<string, any>
   }
 
   export interface UseToastOptions {

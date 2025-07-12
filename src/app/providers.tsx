@@ -54,7 +54,7 @@ interface ProvidersProps {
 export function Providers({ children }: ProvidersProps) {
   return (
     <CacheProvider>
-      <ThemeProvider theme={theme}>
+      <ChakraProvider theme={theme}>
         <WagmiConfig config={config}>
           <RainbowKitProvider
             chains={chains}
@@ -67,7 +67,7 @@ export function Providers({ children }: ProvidersProps) {
             {children}
           </RainbowKitProvider>
         </WagmiConfig>
-      </ThemeProvider>
+      </ChakraProvider>
     </CacheProvider>
   );
 }
