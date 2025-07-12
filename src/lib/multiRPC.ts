@@ -13,6 +13,13 @@ export class MultiRPCService {
     return this.providers[this.currentProviderIndex];
   }
 
+  getProvider(index: number = 0): Provider {
+    if (index < 0 || index >= this.providers.length) {
+      throw new Error('Provider index out of bounds');
+    }
+    return this.providers[index];
+  }
+
   // Round-robin provider selection
   rotateProvider(): Provider {
     this.currentProviderIndex = (this.currentProviderIndex + 1) % this.providers.length;

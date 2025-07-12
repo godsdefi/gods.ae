@@ -73,29 +73,5 @@ export interface ThemeProviderProps {
   theme?: any;
 }
 
-declare module '@chakra-ui/react' {
-  export {
-    ButtonProps,
-    ButtonGroupProps,
-    UseToastOptions,
-    UseDisclosureReturn,
-    ToastId,
-    UseToastReturn,
-    BoxProps,
-    FlexProps,
-    ThemeProviderProps
-  };
-
-  export const ButtonGroup: FC<ButtonGroupProps>;
-  export const ThemeProvider: FC<ThemeProviderProps>;
-  export const Button: FC<ButtonProps>;
-  export const Box: FC<BoxProps>;
-  export const Flex: FC<FlexProps>;
-  
-  // Add missing props to Button interface
-  export interface ButtonProps extends ComponentProps<'button'> {
-    bg?: string;
-    justifyContent?: string;
-    py?: number;
-  }
-}
+// This file is deprecated. All types are now in chakra.d.ts
+// Keeping the types here for backwards compatibility

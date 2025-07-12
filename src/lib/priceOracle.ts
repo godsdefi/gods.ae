@@ -34,7 +34,7 @@ export class PriceOracleService {
       throw new Error(`No Chainlink feed found for ${pair}`);
     }
 
-    const aggregator = new Contract(feedAddress, CHAINLINK_ABI, multiRPC.providers[0]);
+    const aggregator = new Contract(feedAddress, CHAINLINK_ABI, multiRPC.getProvider());
     const roundData = await aggregator.latestRoundData();
     
     return Number(roundData.answer) / 1e8; // Chainlink prices have 8 decimals
