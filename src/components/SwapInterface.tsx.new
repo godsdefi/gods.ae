@@ -1,0 +1,211 @@
+import {
+  Box,
+  Button,
+  Stack,
+  Text,
+  useToast,
+  HStack,
+  VStack,
+  Image,
+  IconButton,
+  useDisclosure
+} from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
+import { ArrowDownIcon, RepeatIcon } from '@chakra-ui/icons';
+import { ethers } from 'ethers';
+import { TokenService, Token } from '../lib/tokenService';
+import { DexService } from '../lib/dexService';
+import { TransactionHistoryService, TransactionStatus } from '../lib/transactionHistory';
+import { MEVProtectionService } from '../lib/mevProtection';
+import { MultiRPCService } from '../lib/multiRPC';
+import TokenSelector from './TokenSelector';
+import QuoteDisplay from './QuoteDisplay';
+import TransactionHistory from './TransactionHistory';
+
+interface SwapProps {
+  mevProtection: MEVProtectionService;
+  multiRPC: MultiRPCService;
+}
+
+export default function SwapInterface({ mevProtection, multiRPC }: SwapProps) {
+  const [fromToken, setFromToken] = useState<Token | null>(null);
+  const [toToken, setToToken] = useState<Token | null>(null);
+  const [fromAmount, setFromAmount] = useState('');
+  const [quotes, setQuotes] = useState<any[]>([]);
+  const [selectedQuote, setSelectedQuote] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [swapping, setSwapping] = useState(false);
+  const [provider, setProvider] = useState<ethers.Provider | null>(null);
+  
+  const toast = useToast();
+  const tokenService = new TokenService(provider);
+  const dexService = new DexService(provider);
+  const historyService = new TransactionHistoryService(provider);
+  const { isOpen: isHistoryOpen, onOpen: onHistoryOpen, onClose: onHistoryClose } = useDisclosure();
+
+  useEffect(() => {
+    // Initialize provider
+    const initProvider = async () => {
+      try {
+        const healthyProvider = await multiRPC.getHealthyProvider();
+        setProvider(healthyProvider);
+      } catch (error) {
+        console.error('Failed to initialize provider:', error);
+        toast({
+          title: "Connection Error",
+          description: "Failed to connect to network",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    };
+
+    initProvider();
+  }, [multiRPC]);
+
+  useEffect(() => {
+    const fetchQuotes = async () => {
+      if (fromToken && toToken && fromAmount && parseFloat(fromAmount) > 0) {
+        setLoading(true);
+        try {
+          const quotes = await dexService.getAllQuotes(fromToken, toToken, ethers.parseUnits(fromAmount, fromToken.decimals));
+          setQuotes(quotes);
+          setSelectedQuote(quotes[0]); // Select best quote by default
+        } catch (error) {
+          console.error('Error fetching quotes:', error);
+          if (error instanceof Error) {
+            toast({
+              title: "Failed to fetch quotes",
+              description: error.message,
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+          }
+        }
+        setLoading(false);
+      }
+    };
+
+    fetchQuotes();
+  }, [fromToken, toToken, fromAmount]);
+
+  const handleSwap = async () => {
+    if (!selectedQuote || !provider || !fromToken || !toToken) return;
+
+    setSwapping(true);
+    try {
+      // Initialize MEV protection with signing key
+      await mevProtection.init(process.env.NEXT_PUBLIC_FLASHBOTS_SIGNING_KEY || '');
+
+      const tx = await dexService.executeSwap(selectedQuote);
+      const receipt = await tx.wait();
+
+      await historyService.addTransaction({
+        hash: receipt.hash,
+        fromToken: fromToken.symbol,
+        toToken: toToken.symbol,
+        fromAmount,
+        toAmount: selectedQuote.estimatedOutput,
+        status: 'confirmed' as TransactionStatus,
+        timestamp: Date.now()
+      });
+
+      toast({
+        title: "Swap successful",
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error('Swap failed:', error);
+      if (error instanceof Error) {
+        toast({
+          title: "Swap failed",
+          description: error.message,
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      }
+    }
+    setSwapping(false);
+  };
+
+  const handleTokenSwitch = () => {
+    const tempToken = fromToken;
+    setFromToken(toToken);
+    setToToken(tempToken);
+    setFromAmount('');
+    setQuotes([]);
+    setSelectedQuote(null);
+  };
+
+  return (
+    <Box maxW="lg" mx="auto" p={4}>
+      <Stack direction="column" spacing="4" align="stretch">
+        <Box p={4} borderWidth={1} borderRadius="lg">
+          <Stack direction="column" spacing="4">
+            <TokenSelector
+              tokens={[fromToken]}
+              onTokenChange={setFromToken}
+              value={fromAmount}
+              onChange={setFromAmount}
+              label="From"
+            />
+            
+            <Button
+              variant="ghost"
+              onClick={handleTokenSwitch}
+              aria-label="Switch tokens"
+            >
+              <RepeatIcon />
+            </Button>
+
+            <TokenSelector
+              tokens={[toToken]}
+              onTokenChange={setToToken}
+              label="To"
+              readOnly
+            />
+
+            {quotes.length > 0 && selectedQuote && (
+              <QuoteDisplay
+                selectedDex={selectedQuote.dex}
+                onDexSelect={setSelectedQuote}
+                allDexes={quotes}
+                estimate={selectedQuote.estimate}
+              />
+            )}
+
+            <Button
+              colorScheme="blue"
+              width="full"
+              onClick={handleSwap}
+              loading={swapping}
+              loadingText="Swapping"
+              disabled={!selectedQuote || !fromToken || !toToken || swapping}
+            >
+              Swap
+            </Button>
+          </Stack>
+        </Box>
+
+        <Button
+          variant="outline"
+          width="full"
+          onClick={onHistoryOpen}
+        >
+          <RepeatIcon />
+          <Text ml={2}>Transaction History</Text>
+        </Button>
+
+        <TransactionHistory
+          transactions={[]}
+          onClose={onHistoryClose}
+        />
+      </Stack>
+    </Box>
+  );
+}

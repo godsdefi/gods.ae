@@ -1,0 +1,53 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --gods-dark: #0A0B0E;
+    --gods-primary: #00F0FF;
+    --gods-secondary: #6E7179;
+  }
+}
+
+@layer components {
+  .gods-card {
+    @apply bg-gods-card backdrop-blur-xl border border-gods-border rounded-xl shadow-gods-card;
+  }
+
+  .gods-button {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
+           bg-gods-primary text-gods-dark hover:bg-opacity-90
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .gods-button-secondary {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
+           bg-transparent border border-gods-border text-gods-primary
+           hover:bg-gods-primary hover:bg-opacity-10;
+  }
+
+  .gods-input {
+    @apply bg-gods-card border border-gods-border rounded-lg px-4 py-2
+           text-white placeholder-gods-secondary focus:ring-2 focus:ring-gods-primary
+           focus:border-transparent;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gods-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gods-secondary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gods-primary);
+}
