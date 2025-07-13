@@ -8,30 +8,216 @@
     --gods-primary: #00F0FF;
     --gods-secondary: #6E7179;
   }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--gods-dark);
+    color: white;
+    overflow-x: hidden;
+  }
+
+  /* Selection styling */
+  ::selection {
+    background: rgba(0, 240, 255, 0.2);
+    color: white;
+  }
+
+  ::-moz-selection {
+    background: rgba(0, 240, 255, 0.2);
+    color: white;
+  }
 }
 
 @layer components {
   .gods-card {
     @apply bg-gods-card backdrop-blur-xl border border-gods-border rounded-xl shadow-gods-card;
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    transition: all 0.3s ease;
+  }
+
+  .gods-card:hover {
+    @apply shadow-gods-glow;
+    transform: translateY(-2px);
   }
 
   .gods-button {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
            bg-gods-primary text-gods-dark hover:bg-opacity-90
-           disabled:opacity-50 disabled:cursor-not-allowed;
+           disabled:opacity-50 disabled:cursor-not-allowed
+           relative overflow-hidden;
+  }
+
+  .gods-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.6s;
+  }
+
+  .gods-button:hover::before {
+    left: 100%;
   }
 
   .gods-button-secondary {
     @apply px-4 py-2 rounded-lg font-medium transition-all duration-200
            bg-transparent border border-gods-border text-gods-primary
-           hover:bg-gods-primary hover:bg-opacity-10;
+           hover:bg-gods-primary hover:bg-opacity-10
+           relative overflow-hidden;
   }
 
   .gods-input {
     @apply bg-gods-card border border-gods-border rounded-lg px-4 py-2
            text-white placeholder-gods-secondary focus:ring-2 focus:ring-gods-primary
-           focus:border-transparent;
+           focus:border-transparent backdrop-blur-xl;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
   }
+
+  /* Animated gradient text */
+  .gradient-text {
+    @apply bg-gradient-to-r from-gods-primary via-gods-green to-gods-purple bg-clip-text text-transparent;
+    background-size: 200% 200%;
+    animation: gradientMove 3s ease infinite;
+  }
+
+  /* Pulse animation */
+  .pulse-ring {
+    @apply absolute inset-0 rounded-full border-2 border-gods-primary opacity-30;
+    animation: pulseRing 2s ease-out infinite;
+  }
+
+  /* Floating animation */
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  /* Glow effect */
+  .glow {
+    @apply shadow-gods-glow;
+    animation: glow 2s ease-in-out infinite alternate;
+  }
+
+  /* Shimmer effect */
+  .shimmer {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .shimmer::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(0, 240, 255, 0.1), transparent);
+    animation: shimmer 2s infinite;
+  }
+
+  /* Typing effect */
+  .typing {
+    border-right: 2px solid var(--gods-primary);
+    animation: typing 4s steps(40, end) infinite, blink 0.75s step-end infinite;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}
+
+/* Keyframe animations */
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@keyframes pulseRing {
+  0% {
+    transform: scale(1);
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes floating {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes glow {
+  from {
+    box-shadow: 0 0 20px rgba(0, 240, 255, 0.1);
+  }
+  to {
+    box-shadow: 0 0 30px rgba(0, 240, 255, 0.2);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+@keyframes typing {
+  0% {
+    width: 0;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 0;
+  }
+}
+
+@keyframes blink {
+  from, to {
+    border-color: transparent;
+  }
+  50% {
+    border-color: var(--gods-primary);
+  }
+}
+
+/* Loading spinner */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner {
+  @apply w-6 h-6 border-2 border-gods-secondary border-t-gods-primary rounded-full;
+  animation: spin 1s linear infinite;
 }
 
 /* Custom scrollbar */
@@ -46,8 +232,56 @@
 ::-webkit-scrollbar-thumb {
   background: var(--gods-secondary);
   border-radius: 4px;
+  transition: background 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--gods-primary);
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .gods-card {
+    @apply p-4;
+  }
+  
+  .gradient-text {
+    background-size: 150% 150%;
+  }
+}
+
+/* Dark mode specific styles */
+@media (prefers-color-scheme: dark) {
+  body {
+    color-scheme: dark;
+  }
+}
+
+/* Reduced motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* Focus styles for accessibility */
+button:focus,
+input:focus,
+a:focus {
+  outline: 2px solid var(--gods-primary);
+  outline-offset: 2px;
+}
+
+/* Print styles */
+@media print {
+  * {
+    background: white !important;
+    color: black !important;
+  }
 }
